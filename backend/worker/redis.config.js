@@ -8,4 +8,4 @@ const redisConfig = {
 
 const redisConnection = new IORedis(redisConfig);
 
-module.exports = { redisConfig, redisConnection };
+module.exports = { redisConnection };
