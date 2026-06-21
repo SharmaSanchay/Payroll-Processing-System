@@ -6,7 +6,7 @@ const TEMPLATES_DIR = path.join(__dirname, '../../public/templates');
 function loadEmailTemplate(templateName, format = 'html', variables = {}) {
   try {
     const templatePath = path.join(TEMPLATES_DIR, `${templateName}.${format}`);
-
+    
     if (!fs.existsSync(templatePath)) {
       throw new Error(`Template not found: ${templateName}.${format}`);
     }
@@ -24,16 +24,13 @@ function loadEmailTemplate(templateName, format = 'html', variables = {}) {
     throw error;
   }
 }
-
 function getEmailSubject(templateName) {
   const subjects = {
     'welcome-onboarding': 'Welcome to Payroll Processing System!',
-    'payroll-processed': 'Payroll Processed Successfully',
     'password-reset': 'Password Reset Request',
     'email-verification': 'Verify Your Email',
   };
 
   return subjects[templateName] || 'Notification from Payroll Processing System';
 }
-
 module.exports = { loadEmailTemplate, getEmailSubject };

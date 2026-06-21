@@ -1,38 +1,19 @@
 {
-  
   "scripts": {
-  
-    
-  "start": "node src/index.js",
-  
-    
-  "dev": "nodemon src/index.js"
-  
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "worker": "node worker/emailWorker/email-worker.js"
   },
-  
   "dependencies": {
-  
-    
-  "cors": "^2.8.6",
-  
-    
-  "dotenv": "^17.4.2",
-  
-    
-  "express": "^5.2.1",
-  
-    
-  "mongoose": "^9.7.1",
-  
-    
-  "zod": "^3.25.76"
-  
+    "bullmq": "^5.79.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "mongoose": "^9.7.1",
+    "nodemailer": "^9.0.1",
+    "zod": "^3.25.76"
   },
-  
   "devDependencies": {
-  
-    
-  "nodemon": "^3.1.14"
-  
+    "nodemon": "^3.1.14"
   }
 }
