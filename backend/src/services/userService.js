@@ -1,4 +1,5 @@
-const User = require("../models/User");
+const { queueWelcomeEmail } = require('../../worker/emailWorker/email-queue');
+const User = require('../models/User');
 
 async function createUser(payload) {
   const exists = await User.findOne({ email: payload.email });
@@ -7,7 +8,13 @@ async function createUser(payload) {
     err.status = 409;
     throw err;
   }
-  return User.create(payload);
+    const result = await User.create(payload);
+    try {
+      await queueWelcomeEmail(result);
+    } catch (err) {
+      console.error('Failed to queue welcome email:', err.message || err);
+    }
+  return result;
 }
 
 async function getUserById(id) {

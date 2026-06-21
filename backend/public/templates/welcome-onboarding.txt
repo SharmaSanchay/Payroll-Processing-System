@@ -1,0 +1,30 @@
+=====================================
+WELCOME TO PAYROLL PROCESSING SYSTEM
+=====================================
+
+Hello {{userName}},
+
+We're thrilled to have you on board! Your account has been successfully created, and you're now ready to explore the Payroll Processing System.
+
+WHAT YOU CAN DO:
+- ✓ Manage payroll records efficiently
+- ✓ Track employee payments and deductions
+- ✓ Generate detailed payroll reports
+- ✓ Access secure employee database
+- ✓ Download payslips and documentation
+
+GET STARTED:
+Visit your dashboard to begin: {{dashboardUrl}}
+
+NEED HELP?
+- Documentation: {{docsUrl}}
+- Support Email: support@payroll.com
+
+If you have any questions or encounter any issues, don't hesitate to reach out. We're here to help!
+
+Best regards,
+The Payroll Processing Team
+
+=====================================
+© 2026 Payroll Processing System. All rights reserved.
+This is an automated message, please do not reply directly to this email.
