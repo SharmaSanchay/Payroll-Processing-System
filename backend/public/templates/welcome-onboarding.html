@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Payroll Processing System</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #007bff;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #007bff;
+            margin: 0;
+            font-size: 28px;
+        }
+        .content {
+            margin: 20px 0;
+        }
+        .content p {
+            margin: 15px 0;
+            font-size: 16px;
+        }
+        .greeting {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .features {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-left: 4px solid #007bff;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .features ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .features li {
+            margin: 10px 0;
+            color: #555;
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: #007bff;
+            color: #ffffff;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin: 20px 0;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+        .cta-button:hover {
+            background-color: #0056b3;
+        }
+        .footer {
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
+            margin-top: 30px;
+            text-align: center;
+            font-size: 12px;
+            color: #999;
+        }
+        .support-info {
+            background-color: #e7f3ff;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+            font-size: 14px;
+            color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎉 Welcome to Payroll Processing System</h1>
+        </div>
+
+        <div class="content">
+            <p class="greeting">Hello {{userName}},</p>
+
+            <p>We're thrilled to have you on board! Your account has been successfully created, and you're now ready to explore the Payroll Processing System.</p>
+
+            <div class="features">
+                <strong>Here's what you can do:</strong>
+                <ul>
+                    <li>✅ Manage payroll records efficiently</li>
+                    <li>✅ Track employee payments and deductions</li>
+                    <li>✅ Generate detailed payroll reports</li>
+                    <li>✅ Access secure employee database</li>
+                    <li>✅ Download payslips and documentation</li>
+                </ul>
+            </div>
+
+            <p>To get started, click the button below to access your dashboard:</p>
+
+            <center>
+                <a href="{{dashboardUrl}}" class="cta-button">Access Your Dashboard</a>
+            </center>
+
+            <div class="support-info">
+                <strong>Need Help?</strong><br>
+                Check out our <a href="{{docsUrl}}" style="color: #0056b3; text-decoration: none;">documentation</a> or contact our support team at <a href="mailto:support@payroll.com" style="color: #0056b3; text-decoration: none;">support@payroll.com</a>
+            </div>
+
+            <p>If you have any questions or encounter any issues, don't hesitate to reach out. We're here to help!</p>
+
+            <p>Best regards,<br><strong>The Payroll Processing Team</strong></p>
+        </div>
+
+        <div class="footer">
+            <p>© 2026 Payroll Processing System. All rights reserved.<br>
+            This is an automated message, please do not reply directly to this email.</p>
+        </div>
+    </div>
+</body>
+</html>
