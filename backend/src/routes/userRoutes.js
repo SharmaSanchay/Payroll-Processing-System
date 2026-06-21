@@ -15,3 +15,5 @@ router.put('/update/:id', validateParams(idParam), validateBody(updateUserSchema
 router.patch('/:id/toggle-status', validateParams(idParam), userController.toggleStatus);
 
 module.exports = router;
+
+console.log("new branch")
