@@ -1,7 +1,7 @@
 require('dotenv').config();
 const { Worker } = require('bullmq');
-const { payrollQueue } = require('./payroll-queue');
-const { redisConnection } = require('../redis.config');
+const { redisConfig } = require('../redis.config');
+const { connectDB } = require('../../src/config/db');
 const { processPayroll } = require('../../src/services/payrollService');
 const { sendTemplateEmail } = require('../../src/services/emailService');
 
@@ -12,11 +12,11 @@ const payrollWorker = new Worker(
 
     try {
       if (job.name === 'process:payroll') {
-        console.log(`Processing payroll job ${job.id}: Payroll ${payrollId}`);
+        console.log(`[Worker] Processing payroll job ${job.id}: Payroll ${payrollId}`);
         const result = await processPayroll(job.data);
         return result;
       } else if (job.name === 'send:payroll-email') {
-        console.log(`Sending payroll email job ${job.id}: Payroll ${payrollId}`);
+        console.log(`[Worker] Sending payroll email job ${job.id}: Payroll ${payrollId}`);
         const { employeeName, employeeEmail, salaryPeriod, netAmount } = job.data;
 
         const variables = {
@@ -31,7 +31,7 @@ const payrollWorker = new Worker(
           variables,
         });
 
-        console.log(`Payroll email sent successfully (Job: ${job.id}, Message ID: ${info.messageId})`);
+        console.log(`[Worker] Payroll email sent successfully (Job: ${job.id}, Message ID: ${info.messageId})`);
         return {
           success: true,
           payrollId,
@@ -39,15 +39,17 @@ const payrollWorker = new Worker(
           timestamp: new Date().toISOString(),
         };
       } else {
-        throw new Error(`Unknown job type: ${job.name}`);
+        const errorMsg = `Unsupported job name "${job.name}". Expected "process:payroll" or "send:payroll-email".`;
+        console.error(`[Worker] Error on Job ${job.id}: ${errorMsg}`);
+        throw new Error(errorMsg);
       }
     } catch (error) {
-      console.error(`Error processing job ${job.id}:`, error.message);
+      console.error(`[Worker] Error processing job ${job.id}:`, error.message);
       throw error;
     }
   },
   {
-    connection: redisConnection,
+    connection: redisConfig,
     concurrency: 10,
     limiter: {
       max: 100,
@@ -57,26 +59,32 @@ const payrollWorker = new Worker(
 );
 
 payrollWorker.on('failed', (job, err) => {
-  console.error(`Payroll job ${job?.id} failed with error: ${err.message}`);
+  console.error(`[Worker] Job ${job?.id} failed permanently: ${err.message}`);
 });
 
 payrollWorker.on('completed', (job) => {
-  console.log(`Payroll job ${job.id} has successfully finished.`);
+  console.log(`[Worker] Job ${job.id} completed successfully.`);
 });
 
 payrollWorker.on('error', (err) => {
-  console.error(`Payroll worker error:`, err);
+  console.error(`[Worker] Uncaught worker error:`, err);
 });
 
 const handleShutdown = async (signal) => {
-  console.log(`Received ${signal}. Closing payroll worker safely...`);
-  await payrollWorker.close();
-  process.exit(0);
+  console.log(`[Worker] Received ${signal}. Closing payroll worker safely...`);
+  try {
+    await payrollWorker.close();
+    console.log(`[Worker] Closed successfully.`);
+    process.exit(0);
+  } catch (err) {
+    console.error(`[Worker] Error during shutdown:`, err);
+    process.exit(1);
+  }
 };
 
 process.on('SIGTERM', () => handleShutdown('SIGTERM'));
 process.on('SIGINT', () => handleShutdown('SIGINT'));
 
-console.log('Payroll worker started and listening to PayrollProcessingQueue...');
+console.log('[Worker] Payroll worker started and listening to PayrollProcessingQueue...');
 
 module.exports = payrollWorker;

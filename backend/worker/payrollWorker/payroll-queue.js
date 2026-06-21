@@ -1,8 +1,8 @@
 const { Queue } = require('bullmq');
-const { redisConnection } = require('../../worker/redis.config');
+const { redisConfig } = require('../redis.config');
 
 const payrollQueue = new Queue('PayrollProcessingQueue', {
-  connection: redisConnection,
+  connection: redisConfig,
   defaultJobOptions: {
     attempts: 3,
     backoff: {
@@ -22,7 +22,7 @@ async function queuePayrollProcessing(payrollData, priority = 5) {
     netAmount: payrollData.net_amount,
   }, { priority });
 
-  console.log(`Payroll ${payrollData._id} queued for processing (Job ID: ${job.id})`);
+  console.log(`[Queue] Payroll ${payrollData._id} queued for processing (Job ID: ${job.id})`);
   return job;
 }
 
@@ -35,7 +35,7 @@ async function queuePayrollEmailNotification(payrollData, employeeData) {
     netAmount: payrollData.net_amount,
   }, { priority: 3 });
 
-  console.log(`Email notification queued for payroll ${payrollData._id}`);
+  console.log(`[Queue] Email notification queued for payroll ${payrollData._id}`);
   return job;
 }
 

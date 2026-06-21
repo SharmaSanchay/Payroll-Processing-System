@@ -30,16 +30,12 @@ async function bulkApprovePayrolls(payrollIds) {
       skippedCount: skippedPayrolls.length,
     };
   }
-  const session = await Payroll.startSession();
-  session.startTransaction();
+  const unprocessedIds = unprocessedPayrolls.map(p => p._id);
 
   try {
-    const unprocessedIds = unprocessedPayrolls.map(p => p._id);
-
     await Payroll.updateMany(
       { _id: { $in: unprocessedIds } },
-      { $set: { status: PayrollStatus.IN_PROGRESS, updated_at: new Date() } },
-      { session }
+      { $set: { status: PayrollStatus.IN_PROGRESS, updated_at: new Date() } }
     );
 
     const queuePromises = unprocessedPayrolls.map(payroll =>
@@ -52,8 +48,7 @@ async function bulkApprovePayrolls(payrollIds) {
     const queuedJobs = await Promise.all(queuePromises);
     const successfulQueues = queuedJobs.filter(job => job !== null).length;
 
-    await session.commitTransaction();
-    console.log(`Transaction committed. Queued ${successfulQueues} jobs`);
+    console.log(`Bulk approval completed. Queued ${successfulQueues} jobs`);
 
     return {
       message: 'Payroll processing initiated successfully',
@@ -61,11 +56,13 @@ async function bulkApprovePayrolls(payrollIds) {
       skippedCount: skippedPayrolls.length,
     };
   } catch (error) {
-    await session.abortTransaction();
-    console.error('Transaction aborted due to error:', error.message);
+    await Payroll.updateMany(
+      { _id: { $in: unprocessedIds } },
+      { $set: { status: PayrollStatus.UNPROCESSED, updated_at: new Date() } }
+    ).catch(rollbackErr => console.error('Rollback failed:', rollbackErr.message));
+
+    console.error('Bulk approval failed:', error.message);
     throw new Error(`Bulk approval failed: ${error.message}`);
-  } finally {
-    session.endSession();
   }
 }
 
