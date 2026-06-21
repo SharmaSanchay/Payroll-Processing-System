@@ -34,18 +34,4 @@ async function sendTemplateEmail(options) {
   }
 }
 
-async function sendWelcomeEmail(user, dashboardUrl, docsUrl) {
-  const variables = {
-    userName: user.name || user.email.split('@')[0],
-    dashboardUrl: dashboardUrl || process.env.APP_URL || 'https://app.example.com/dashboard',
-    docsUrl: docsUrl || process.env.APP_URL || 'https://docs.example.com',
-  };
-
-  return sendTemplateEmail({
-    to: user.email,
-    template: 'welcome-onboarding',
-    variables,
-  });
-}
-
-module.exports = { transporter, sendTemplateEmail, sendWelcomeEmail };
+module.exports = { transporter, sendTemplateEmail };
