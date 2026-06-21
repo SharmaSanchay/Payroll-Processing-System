@@ -23,11 +23,9 @@ function loadEmailTemplate(templateName, format = 'html', variables = {}) {
     throw error;
   }
 }
-
 function getEmailSubject(templateName) {
   const subjects = {
     'welcome-onboarding': 'Welcome to Payroll Processing System!',
-    'payroll-processed': 'Payroll Processed Successfully',
     'password-reset': 'Password Reset Request',
     'email-verification': 'Verify Your Email',
   };
