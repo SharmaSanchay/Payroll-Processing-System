@@ -38,17 +38,25 @@ async function bulkApprovePayrolls(payrollIds) {
       { $set: { status: PayrollStatus.IN_PROGRESS, updated_at: new Date() } }
     );
 
-    const queuePromises = unprocessedPayrolls.map(payroll =>
-      queuePayrollProcessing(payroll, 5).catch(err => {
-        console.error(`Failed to queue payroll ${payroll._id}:`, err.message);
-        return null;
-      })
+    const queueResults = await Promise.allSettled(
+      unprocessedPayrolls.map(payroll => queuePayrollProcessing(payroll, 5))
     );
 
-    const queuedJobs = await Promise.all(queuePromises);
-    const successfulQueues = queuedJobs.filter(job => job !== null).length;
+    const successfulQueues = queueResults.filter(result => result.status === 'fulfilled').length;
+    const failedPayrollIds = queueResults
+      .map((result, index) => ({ result, payrollId: unprocessedIds[index] }))
+      .filter(entry => entry.result.status === 'rejected')
+      .map(entry => entry.payrollId);
 
-    console.log(`Bulk approval completed. Queued ${successfulQueues} jobs`);
+    if (failedPayrollIds.length > 0) {
+      console.error(`Failed to queue ${failedPayrollIds.length} payroll(s), reverting their status to UNPROCESSED.`);
+      await Payroll.updateMany(
+        { _id: { $in: failedPayrollIds } },
+        { $set: { status: PayrollStatus.UNPROCESSED, updated_at: new Date() } }
+      );
+    }
+
+    console.log(`Bulk approval completed. Queued ${successfulQueues} jobs, ${failedPayrollIds.length} failed to queue.`);
 
     return {
       message: 'Payroll processing initiated successfully',

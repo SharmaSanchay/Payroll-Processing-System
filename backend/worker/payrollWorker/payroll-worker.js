@@ -5,6 +5,15 @@ const { connectDB } = require('../../src/config/db');
 const { processPayroll } = require('../../src/services/payrollService');
 const { sendTemplateEmail } = require('../../src/services/emailService');
 
+(async () => {
+  try {
+    await connectDB();
+  } catch (err) {
+    console.error('[Worker] Failed to connect to MongoDB. Exiting.', err.message);
+    process.exit(1);
+  }
+})();
+
 const payrollWorker = new Worker(
   'PayrollProcessingQueue',
   async (job) => {
