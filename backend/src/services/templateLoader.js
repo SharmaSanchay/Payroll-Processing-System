@@ -6,6 +6,7 @@ const TEMPLATES_DIR = path.join(__dirname, '../../public/templates');
 function loadEmailTemplate(templateName, format = 'html', variables = {}) {
   try {
     const templatePath = path.join(TEMPLATES_DIR, `${templateName}.${format}`);
+    
     if (!fs.existsSync(templatePath)) {
       throw new Error(`Template not found: ${templateName}.${format}`);
     }
