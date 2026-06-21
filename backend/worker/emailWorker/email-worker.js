@@ -1,12 +1,20 @@
 require('dotenv').config();
 const { Worker } = require('bullmq');
+const { z } = require('zod');
 const { sendTemplateEmail } = require('../../src/services/emailService');
-const { redisConnection } = require('../redis.config');
+const { redisConfig } = require('../redis.config');
+
 
 const emailWorker = new Worker(
   "EmailDeliveryQueue",
   async (job) => {
-    const { to, template, variables = {} } = job.data;
+    if (job.name !== 'send:welcome') {
+      const errorMsg = `Unsupported job name "${job.name}". Expected "send:welcome".`;
+      console.error(`[Worker] Error on Job ${job.id}: ${errorMsg}`);
+      throw new Error(errorMsg);
+    }
+
+    const { to, template, variables } = job.data;
 
     try {
       const info = await sendTemplateEmail({
@@ -15,19 +23,19 @@ const emailWorker = new Worker(
         variables
       });
 
-      console.log(`Email sent successfully (Job: ${job.id}, Message ID: ${info.messageId})`);
+      console.log(`[Worker] Email sent successfully (Job: ${job.id}, Message ID: ${info.messageId})`);
       return {
         success: true,
         messageId: info.messageId,
         timestamp: new Date().toISOString()
       };
     } catch (error) {
-      console.error(`Error processing email job ${job.id}:`, error.message);
+      console.error(`[Worker] Error processing email job ${job.id}:`, error.message);
       throw error;
     }
   },
   {
-    connection: redisConnection,
+    connection: redisConfig,
     concurrency: 10,
     limiter: {
       max: 50,
@@ -37,21 +45,27 @@ const emailWorker = new Worker(
 );
 
 emailWorker.on("failed", (job, err) => {
-  console.error(`Job ${job?.id} failed with error: ${err.message}`);
+  console.error(`[Worker] Job ${job?.id} failed permanently: ${err.message}`);
 });
 
 emailWorker.on("completed", (job) => {
-  console.log(`Job ${job.id} has successfully finished.`);
+  console.log(`[Worker] Job ${job.id} completed successfully.`);
 });
 
 emailWorker.on("error", (err) => {
-  console.error(`Worker error:`, err);
+  console.error(`[Worker] Uncaught worker error:`, err);
 });
 
 const handleShutdown = async (signal) => {
-  console.log(`Received ${signal}. Closing worker safely...`);
-  await emailWorker.close();
-  process.exit(0);
+  console.log(`[Worker] Received ${signal}. Closing worker safely...`);
+  try {
+    await emailWorker.close();
+    console.log(`[Worker] Closed successfully.`);
+    process.exit(0);
+  } catch (err) {
+    console.error(`[Worker] Error during shutdown:`, err);
+    process.exit(1);
+  }
 };
 
 process.on('SIGTERM', () => handleShutdown('SIGTERM'));
