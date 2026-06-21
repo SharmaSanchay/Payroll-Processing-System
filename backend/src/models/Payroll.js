@@ -10,8 +10,8 @@ const payrollSchema = new mongoose.Schema({
   net_amount: { type: Number, required: true },
   status: {
     type: String,
-    enum: ['unprocessed', 'processed', 'failed'],
-    default: 'unprocessed',
+    enum: ['UNPROCESSED', 'IN_PROGRESS', 'PROCESSED', 'FAILED'],
+    default: 'UNPROCESSED',
   },
 }, {
   timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' },

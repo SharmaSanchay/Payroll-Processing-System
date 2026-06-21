@@ -1,0 +1,28 @@
+=====================================
+PAYROLL PROCESSED SUCCESSFULLY
+=====================================
+
+Hello {{employeeName}},
+
+Great news! Your pending payroll has been processed successfully and is ready for review.
+
+=====================================
+PAYROLL DETAILS
+=====================================
+
+Salary Period: {{salaryPeriod}}
+Net Amount: {{netAmount}}
+
+=====================================
+
+Your payroll has been processed and will be deposited to your account as per company policy. If you have any questions, please contact the HR department.
+
+Thank you for your continued service!
+
+Best regards,
+The Payroll Department
+
+=====================================
+© 2026 Payroll Processing System. All rights reserved.
+This is an automated message. Do not reply directly to this email.
+For support, contact: hr@payroll.com

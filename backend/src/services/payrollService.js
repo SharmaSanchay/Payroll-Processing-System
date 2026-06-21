@@ -1,0 +1,113 @@
+const Payroll = require('../../src/models/Payroll');
+const User = require('../../src/models/User');
+const { queuePayrollProcessing, queuePayrollEmailNotification } = require('../../worker/payrollWorker/payroll-queue');
+const PayrollStatus = require('../../src/constants/PayrollStatus');
+
+
+async function bulkApprovePayrolls(payrollIds) {
+  if (!Array.isArray(payrollIds) || payrollIds.length === 0) {
+    throw new Error('Nothing to process');
+  }
+
+  const payrolls = await Payroll.find({ _id: { $in: payrollIds } }).lean();
+  console.log(`Fetched ${payrolls.length} payrolls from database`);
+
+  if (payrolls.length === 0) {
+    return {
+      message: 'No payrolls found with given IDs',
+      queuedCount: 0,
+      skippedCount: 0,
+    };
+  }
+
+  const unprocessedPayrolls = payrolls.filter(p => p.status === PayrollStatus.UNPROCESSED);
+  const skippedPayrolls = payrolls.filter(p => p.status !== PayrollStatus.UNPROCESSED);
+
+  if (unprocessedPayrolls.length === 0) {
+    return {
+      message: 'No unprocessed payrolls found to approve',
+      queuedCount: 0,
+      skippedCount: skippedPayrolls.length,
+    };
+  }
+  const session = await Payroll.startSession();
+  session.startTransaction();
+
+  try {
+    const unprocessedIds = unprocessedPayrolls.map(p => p._id);
+
+    await Payroll.updateMany(
+      { _id: { $in: unprocessedIds } },
+      { $set: { status: PayrollStatus.IN_PROGRESS, updated_at: new Date() } },
+      { session }
+    );
+
+    const queuePromises = unprocessedPayrolls.map(payroll =>
+      queuePayrollProcessing(payroll, 5).catch(err => {
+        console.error(`Failed to queue payroll ${payroll._id}:`, err.message);
+        return null;
+      })
+    );
+
+    const queuedJobs = await Promise.all(queuePromises);
+    const successfulQueues = queuedJobs.filter(job => job !== null).length;
+
+    await session.commitTransaction();
+    console.log(`Transaction committed. Queued ${successfulQueues} jobs`);
+
+    return {
+      message: 'Payroll processing initiated successfully',
+      queuedCount: successfulQueues,
+      skippedCount: skippedPayrolls.length,
+    };
+  } catch (error) {
+    await session.abortTransaction();
+    console.error('Transaction aborted due to error:', error.message);
+    throw new Error(`Bulk approval failed: ${error.message}`);
+  } finally {
+    session.endSession();
+  }
+}
+
+async function processPayroll(payrollData) {
+  const { payrollId, employeeId, salaryPeriod, netAmount } = payrollData;
+
+  try {
+    console.log(`Processing payroll ${payrollId} for employee ${employeeId}`);
+    const employee = await User.findById(employeeId).lean();
+    if (!employee) {
+      throw new Error(`Employee ${employeeId} not found`);
+    }
+
+    const updatedPayroll = await Payroll.findByIdAndUpdate(
+      payrollId,
+      { $set: { status: PayrollStatus.PROCESSED, updated_at: new Date() } },
+      { new: true }
+    );
+
+    if (!updatedPayroll) {
+      throw new Error(`Payroll ${payrollId} not found`);
+    }
+
+    console.log(`Payroll ${payrollId} processed successfully`);
+
+    await queuePayrollEmailNotification(updatedPayroll, employee);
+
+    return { success: true, payrollId, status: PayrollStatus.PROCESSED };
+  } catch (error) {
+    console.error(`Error processing payroll ${payrollId}:`, error.message);
+
+    await Payroll.findByIdAndUpdate(
+      payrollId,
+      { $set: { status: PayrollStatus.FAILED, updated_at: new Date() } },
+      { new: true }
+    ).catch(err => console.error('Failed to update payroll status:', err));
+
+    throw error;
+  }
+}
+
+module.exports = {
+  bulkApprovePayrolls,
+  processPayroll,
+};
